@@ -13,6 +13,7 @@ namespace Reva_Api.Controllers
     {
         readonly BlobServiceClient _blobServiceClient;
         readonly ApiResponse _response;
+        string containerName = "revadata";
         public AzureContainerController(BlobServiceClient blobServiceClient)
         {
             _blobServiceClient = blobServiceClient;
@@ -44,6 +45,34 @@ namespace Reva_Api.Controllers
                 _response.IsSuccess = false;
                 _response.StatusCode = HttpStatusCode.InternalServerError;
                 _response.Message = new List<string> { ex.Message};
+            }
+            return _response;
+        }
+
+        [HttpGet]
+        public async Task<ActionResult<ApiResponse>> GetBlobList()
+        {
+            List<string> listofcontainer = new List<string>();
+            
+            try
+            {
+                BlobContainerClient containerClient =  _blobServiceClient.GetBlobContainerClient(containerName);
+                await foreach (BlobItem blobItem in containerClient.GetBlobsAsync())
+                {
+                    listofcontainer.Add(blobItem.Name);                    
+
+                }
+                _response.Result = listofcontainer;
+                _response.IsSuccess = true;
+                _response.StatusCode = HttpStatusCode.OK;
+                _response.Message = listofcontainer;
+            }
+            catch (Exception ex)
+            {
+                _response.Result = null;
+                _response.IsSuccess = false;
+                _response.StatusCode = HttpStatusCode.InternalServerError;
+                _response.Message = new List<string> { ex.Message };
             }
             return _response;
         }
